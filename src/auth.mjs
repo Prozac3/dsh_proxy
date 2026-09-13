@@ -45,7 +45,7 @@ export function loadAuthConfig(env = process.env) {
   }
   const port = 3082; const hours = Number(env.SESSION_HOURS ?? 12)
   if (!Number.isFinite(hours) || hours <= 0) throw new Error('SESSION_HOURS must be positive')
-  return { user: env.AUTH_USER, password: env.AUTH_PASS, secret: env.SESSION_SECRET, port, hours, secure: new URL(env.PUBLIC_ORIGIN ?? 'http://127.0.0.1:3080').protocol === 'https:' }
+  return { user: env.AUTH_USER, password: env.AUTH_PASS, secret: env.SESSION_SECRET, port, hours, secure: new URL(env.PUBLIC_ORIGIN ?? 'http://127.0.0.1:3000').protocol === 'https:' }
 }
 
 /** Create the loopback auth_request service. */

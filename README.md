@@ -3,7 +3,7 @@
 本项目用 Nginx 为未经修改的 DeepSeek Harness Web 提供单用户远程反向代理：
 
 ```text
-浏览器 → Nginx :3080 → dsh web :3081 (loopback)
+浏览器 → Nginx :3000 → dsh web :3081 (loopback)
                     ↘ auth_request :3082 (loopback)
 ```
 
@@ -46,7 +46,7 @@ DSH_ARGS_JSON=["--dir","/workspace/github/deepseek-harness","dsh","web"]
 
 ## HTTPS
 
-仓库配置在 `0.0.0.0:3080` 提供 HTTP，适合在 Cloudflare Tunnel、云负载均衡器或另一层 Nginx 后运行。公网入口必须终止 HTTPS，并保留原始 `Host` 和 `Origin`。
+仓库配置在 `0.0.0.0:3000` 提供 HTTP，以匹配容器开放端口；它适合在 Cloudflare Tunnel、云负载均衡器或另一层 Nginx 后运行。公网入口必须终止 HTTPS，并保留原始 `Host` 和 `Origin`。
 
 若由本项目的 Nginx 直接终止 TLS，请在 `nginx/dsh-web.conf` 中把监听器改为：
 

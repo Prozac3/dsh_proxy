@@ -20,7 +20,7 @@ function stringArray(name, value, fallback) {
 }
 
 function publicOrigin(value) {
-  const origin = new URL(value ?? 'http://127.0.0.1:3080')
+  const origin = new URL(value ?? 'http://127.0.0.1:3000')
   if ((origin.protocol !== 'http:' && origin.protocol !== 'https:')
     || origin.username !== '' || origin.password !== '' || origin.pathname !== '/'
     || origin.search !== '' || origin.hash !== '') {
