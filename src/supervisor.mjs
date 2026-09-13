@@ -23,6 +23,10 @@ function relay(stream, destination, onLine) {
 
 /** Start an unmodified dsh Web process and add the proxy-facing Web flags. */
 export function startDsh(config, output = process.stdout, errorOutput = process.stderr) {
+  let resolveReady
+  let rejectReady
+  let readySettled = false
+  const ready = new Promise((resolve, reject) => { resolveReady = resolve; rejectReady = reject })
   const args = [
     ...config.dshArgs,
     '--no-open',
@@ -34,12 +38,26 @@ export function startDsh(config, output = process.stdout, errorOutput = process.
     env: process.env,
     stdio: ['inherit', 'pipe', 'pipe'],
   })
+  const failReady = (error) => {
+    if (readySettled) return
+    readySettled = true; rejectReady(error)
+  }
+  child.once('error', (error) => failReady(error))
+  child.once('exit', (code, signal) => {
+    if (!readySettled) failReady(new Error(`dsh exited before announcing its Web URL (${signal ?? String(code)})`))
+  })
   relay(child.stdout, output, (line) => {
     const url = externalUrl(line, config.publicOrigin)
-    if (url !== undefined) output.write(`dsh-proxy: open ${url}\n`)
+    if (url !== undefined) {
+      output.write(`dsh-proxy: open ${url}\n`)
+      const token = new URL(url).searchParams.get('token')
+      if (token !== null && token !== '' && !readySettled) {
+        readySettled = true; resolveReady(token)
+      }
+    }
   })
   relay(child.stderr, errorOutput)
-  return child
+  return { child, ready }
 }
 
 /** Terminate a managed child and wait for it to exit. */
@@ -60,8 +78,8 @@ function loadEnvFile(path) {
   }
 }
 
-function startChild(root, name, command, args) {
-  const handle = spawn(command, args, { cwd: root, env: process.env, stdio: 'inherit' })
+function startChild(root, name, command, args, env = process.env) {
+  const handle = spawn(command, args, { cwd: root, env, stdio: 'inherit' })
   handle.once('error', error => console.error(`dsh-proxy: ${name} failed: ${error.message}`)); return handle
 }
 
@@ -73,15 +91,28 @@ export async function startStack(root) {
   const check = spawnSync('nginx', [...nginxArgs, '-t'], { cwd: root, env: process.env, stdio: 'inherit' })
   if (check.error !== undefined) throw check.error
   if (check.status !== 0) throw new Error('Nginx configuration validation failed')
-  const children = [startChild(root, 'auth', process.execPath, ['bin/auth-server.mjs'])]
-  if (config.manageDsh) children.push(startDsh(config))
-  children.push(startChild(root, 'nginx', 'nginx', [...nginxArgs, '-g', 'daemon off;']))
+  const children = []
   let stopping = false
   const stop = (signal = 'SIGTERM') => {
     if (stopping) return; stopping = true
     for (const handle of children.toReversed()) if (handle.exitCode === null && handle.signalCode === null) handle.kill(signal)
   }
   process.once('SIGINT', () => stop('SIGINT')); process.once('SIGTERM', () => stop('SIGTERM'))
+  const dsh = config.manageDsh ? startDsh(config) : undefined
+  let dshToken = process.env.DSH_LAUNCH_TOKEN
+  if (dsh !== undefined) {
+    children.push(dsh.child)
+    try {
+      dshToken = await dsh.ready
+    } catch (error) {
+      stop()
+      await stopDsh(dsh.child)
+      throw error
+    }
+  }
+  const authEnv = dshToken === undefined ? process.env : { ...process.env, DSH_LAUNCH_TOKEN: dshToken }
+  children.push(startChild(root, 'auth', process.execPath, ['bin/auth-server.mjs'], authEnv))
+  children.push(startChild(root, 'nginx', 'nginx', [...nginxArgs, '-g', 'daemon off;']))
   for (const handle of children) handle.once('exit', (code, signal) => {
     if (!stopping) { console.error(`dsh-proxy: child exited (${signal ?? String(code)})`); stop() }
   })

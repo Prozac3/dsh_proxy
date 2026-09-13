@@ -30,6 +30,20 @@ function cookieValue(header) {
 }
 
 const safeNext = value => typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') ? value : '/'
+
+/**
+ * Complete the Harness launch-token exchange after the proxy login.
+ * Harness accepts its launch token only on the root URL, so the browser
+ * always starts at `/` and is then redirected back to a clean root by DSH.
+ */
+function dshLoginTarget(next, dshToken) {
+  if (typeof dshToken !== 'string' || dshToken.length === 0) return next
+  const target = new URL(next, 'http://dsh-proxy.invalid')
+  target.pathname = '/'; target.search = ''; target.hash = ''
+  target.searchParams.set('token', dshToken)
+  return `${target.pathname}${target.search}`
+}
+
 function page(next, failed = false) {
   const escaped = next.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;')
   return `<!doctype html>
@@ -89,7 +103,17 @@ export function loadAuthConfig(env = process.env) {
   }
   const port = 3082; const hours = Number(env.SESSION_HOURS ?? 12)
   if (!Number.isFinite(hours) || hours <= 0) throw new Error('SESSION_HOURS must be positive')
-  return { user: env.AUTH_USER, password: env.AUTH_PASS, secret: env.SESSION_SECRET, port, hours, secure: new URL(env.PUBLIC_ORIGIN ?? 'http://127.0.0.1:3000').protocol === 'https:' }
+  const dshToken = typeof env.DSH_LAUNCH_TOKEN === 'string' && env.DSH_LAUNCH_TOKEN !== ''
+    ? env.DSH_LAUNCH_TOKEN : undefined
+  return {
+    user: env.AUTH_USER,
+    password: env.AUTH_PASS,
+    secret: env.SESSION_SECRET,
+    dshToken,
+    port,
+    hours,
+    secure: new URL(env.PUBLIC_ORIGIN ?? 'http://127.0.0.1:3000').protocol === 'https:',
+  }
 }
 
 /** Create the loopback auth_request service. */
@@ -113,7 +137,7 @@ export function createAuthServer(config) {
       }
       const attrs = [`${COOKIE_NAME}=${createSession(config.secret, config.hours)}`, 'HttpOnly', 'SameSite=Strict', 'Path=/', `Max-Age=${String(Math.floor(config.hours * 3600))}`]
       if (config.secure) attrs.push('Secure')
-      send(res, 303, '', { location: target, 'set-cookie': attrs.join('; ') })
+      send(res, 303, '', { location: dshLoginTarget(target, config.dshToken), 'set-cookie': attrs.join('; ') })
     })
   })
 }

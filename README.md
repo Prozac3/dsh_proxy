@@ -25,13 +25,13 @@ chmod 600 .env
 ./start.sh
 ```
 
-启动器会先执行 `nginx -t`，随后启动认证服务、原版 `dsh web` 和前台 Nginx。Harness 就绪后会输出公网形式的 token URL：
+启动器会先执行 `nginx -t`，等待原版 Harness 就绪后启动认证服务和前台 Nginx。启动器会在内部接收 Harness 的启动 token，并输出一条诊断用的公网形式 URL：
 
 ```text
 dsh-proxy: open https://dsh.example.com/?token=...
 ```
 
-首次打开会先进入代理登录页，然后回到带 token 的地址，由 Harness 签发自己的 Cookie。后续访问通常不再需要 token URL。
+首次打开根地址会进入代理登录页。用户名和密码验证成功后，反代会自动把浏览器带到一次性 token 交换地址，由 Harness 签发自己的 Cookie，再自动跳转到干净的 Web UI；用户不需要复制、保存或输入 token。打印的 token URL 仅用于故障排查。
 
 ## 使用源码仓库中的 dsh
 
@@ -65,7 +65,7 @@ ssl_certificate_key /etc/letsencrypt/live/dsh.example.com/privkey.pem;
 dsh web --no-open --host 127.0.0.1 --port 3081 --trusted-host dsh.example.com
 ```
 
-此时启动器无法自动改写 token URL；手动把 DSH 输出 URL 的 scheme 与 authority 换成 `PUBLIC_ORIGIN`，保留 `?token=...`。
+此时启动器无法从外部进程读取启动 token。若希望登录后仍自动完成 Harness 首次授权，在 `.env` 中额外设置外部 DSH 当前进程的 `DSH_LAUNCH_TOKEN`；否则需要使用 DSH 输出的 token URL 完成首次授权。
 
 ## 安全说明
 
