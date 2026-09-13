@@ -21,6 +21,14 @@ test('login issues a secure cookie accepted by auth_request', async () => {
   assert.equal(login.status, 303); assert.equal(login.headers.location, '/?token=abc'); assert.match(login.headers['set-cookie'][0], /HttpOnly; SameSite=Strict; Path=\/; Max-Age=3600; Secure/u)
   assert.equal((await request(port, '/_auth', { headers: { cookie: login.headers['set-cookie'][0].split(';', 1)[0] } })).status, 204)
 })
+test('serves the original dark card login presentation', async () => {
+  const port = await start(); const login = await request(port, '/login?next=%2Fsession')
+  assert.equal(login.status, 200)
+  assert.match(login.body, /class="card"/u)
+  assert.match(login.body, /--bg: #151517/u)
+  assert.match(login.body, /登录以访问 Agent Web UI/u)
+  assert.match(login.headers['content-security-policy'], /frame-ancestors 'none'/u)
+})
 test('rejects wrong credentials and external redirects', async () => {
   const port = await start(); const login = await request(port, '/login', { method: 'POST', body: 'username=operator&password=wrong-pass&next=https%3A%2F%2Fevil.example' })
   assert.equal(login.status, 401); assert.doesNotMatch(login.body, /evil\.example/u); assert.equal((await request(port, '/_auth')).status, 401)

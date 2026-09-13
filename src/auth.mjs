@@ -32,10 +32,53 @@ function cookieValue(header) {
 const safeNext = value => typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') ? value : '/'
 function page(next, failed = false) {
   const escaped = next.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;')
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>DSH Login</title><style>body{font:16px system-ui;max-width:24rem;margin:12vh auto;padding:1rem}label,input,button{display:block;width:100%;box-sizing:border-box}input,button{padding:.7rem;margin:.4rem 0 1rem}.error{color:#b00}</style></head><body><h1>DeepSeek Harness</h1>${failed ? '<p class="error">用户名或密码错误。</p>' : ''}<form method="post" action="/login"><input type="hidden" name="next" value="${escaped}"><label>用户名<input name="username" autocomplete="username" required autofocus></label><label>密码<input name="password" type="password" autocomplete="current-password" required></label><button type="submit">登录</button></form></body></html>`
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepSeek Harness</title>
+<style>
+  :root { --bg: #151517; --card: #1b1b1c; --border: rgba(255,255,255,.06); --text: #f5f6f7; --muted: #979da6; --primary: #5686fe; --error: #f56c6c; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .card { width: 340px; padding: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+  .mark { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .mark svg { flex: none; }
+  .title { font-size: 18px; font-weight: 700; }
+  .subtitle { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6px; }
+  input { width: 100%; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; outline: none; }
+  input:focus { border-color: var(--primary); }
+  .error { color: var(--error); font-size: 13px; margin-top: 12px; min-height: 18px; }
+  button { width: 100%; margin-top: 18px; padding: 10px; background: var(--primary); border: none; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+  <form class="card" method="post" action="/login">
+    <div class="mark">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#5686fe"/><path d="M9 21V11l7 6 7-6v10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="title">DeepSeek Harness</div>
+    </div>
+    <div class="subtitle">登录以访问 Agent Web UI</div>
+    <input type="hidden" name="next" value="${escaped}">
+    <label for="user">用户名</label>
+    <input id="user" name="username" autocomplete="username" required autofocus>
+    <label for="pass">密码</label>
+    <input id="pass" name="password" type="password" autocomplete="current-password" required>
+    <div class="error">${failed ? '用户名或密码错误' : ''}</div>
+    <button type="submit">登录</button>
+  </form>
+</body>
+</html>`
 }
 function send(res, status, body = '', headers = {}) {
-  res.writeHead(status, { 'cache-control': 'no-store', ...headers }); res.end(body)
+  res.writeHead(status, {
+    'cache-control': 'no-store',
+    'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+    'x-content-type-options': 'nosniff',
+    ...headers,
+  }); res.end(body)
 }
 
 /** Validate the authentication service environment. */
