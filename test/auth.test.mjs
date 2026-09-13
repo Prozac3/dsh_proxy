@@ -26,6 +26,7 @@ test('serves the original dark card login presentation', async () => {
   assert.equal(login.status, 200)
   assert.match(login.body, /class="card"/u)
   assert.match(login.body, /--bg: #151517/u)
+  assert.match(login.body, /mask: url\('\/favicon\.svg'\)/u)
   assert.match(login.body, /登录以访问 Agent Web UI/u)
   assert.match(login.headers['content-security-policy'], /frame-ancestors 'none'/u)
 })

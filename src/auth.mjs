@@ -44,7 +44,7 @@ function page(next, failed = false) {
   body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
   .card { width: 340px; padding: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
   .mark { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-  .mark svg { flex: none; }
+  .logo { width: 28px; height: 28px; flex: none; background: var(--primary); -webkit-mask: url('/favicon.svg') center / contain no-repeat; mask: url('/favicon.svg') center / contain no-repeat; }
   .title { font-size: 18px; font-weight: 700; }
   .subtitle { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
   label { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6px; }
@@ -57,7 +57,7 @@ function page(next, failed = false) {
 <body>
   <form class="card" method="post" action="/login">
     <div class="mark">
-      <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#5686fe"/><path d="M9 21V11l7 6 7-6v10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="logo" aria-hidden="true"></div>
       <div class="title">DeepSeek Harness</div>
     </div>
     <div class="subtitle">登录以访问 Agent Web UI</div>
@@ -75,7 +75,7 @@ function page(next, failed = false) {
 function send(res, status, body = '', headers = {}) {
   res.writeHead(status, {
     'cache-control': 'no-store',
-    'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+    'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
     'x-content-type-options': 'nosniff',
     ...headers,
   }); res.end(body)
