@@ -1,0 +1,19 @@
+{
+  "name": "dsh-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nginx reverse proxy deployment for an unmodified DeepSeek Harness Web",
+  "bin": {
+    "dsh-proxy": "./bin/dsh-proxy.mjs"
+  },
+  "scripts": {
+    "start": "node ./bin/dsh-proxy.mjs",
+    "check": "node --check ./bin/dsh-proxy.mjs && node --check ./bin/auth-server.mjs && node --check ./src/auth.mjs && node --check ./src/config.mjs && node --check ./src/supervisor.mjs && bash -n ./start.sh",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.19"
+  },
+  "license": "MIT"
+}
