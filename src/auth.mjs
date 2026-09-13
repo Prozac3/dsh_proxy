@@ -40,7 +40,8 @@ function send(res, status, body = '', headers = {}) {
 
 /** Validate the authentication service environment. */
 export function loadAuthConfig(env = process.env) {
-  for (const name of ['AUTH_USER', 'AUTH_PASS', 'SESSION_SECRET']) {
+  if (typeof env.AUTH_USER !== 'string' || env.AUTH_USER.length === 0) throw new Error('AUTH_USER must not be empty')
+  for (const name of ['AUTH_PASS', 'SESSION_SECRET']) {
     if (typeof env[name] !== 'string' || env[name].length < 8) throw new Error(`${name} must contain at least 8 characters`)
   }
   const port = 3082; const hours = Number(env.SESSION_HOURS ?? 12)
