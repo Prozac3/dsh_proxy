@@ -33,6 +33,8 @@ dsh-proxy: open https://dsh.example.com/?token=...
 
 首次打开根地址会进入代理登录页。用户名和密码验证成功后，反代会自动把浏览器带到一次性 token 交换地址，由 Harness 签发自己的 Cookie，再自动跳转到干净的 Web UI；用户不需要复制、保存或输入 token。打印的 token URL 仅用于故障排查。
 
+通过非 loopback 域名访问时，启动器会在经过代理认证的 Harness 主页面中注入 `ownsHost` 启动标记，使原版客户端继续使用 Host 设置持久化。该标记在任何 Harness 客户端模块执行前生效，不修改 Harness 源码或构建产物。获得代理账号即获得本机浏览器界面的同等操作能力，因此公网入口必须使用 HTTPS，并妥善保护代理密码。
+
 ## 使用源码仓库中的 dsh
 
 未全局安装 `dsh` 时，在 `.env` 中配置：

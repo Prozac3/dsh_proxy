@@ -1,6 +1,6 @@
 {
   "name": "dsh-proxy",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Nginx reverse proxy deployment for an unmodified DeepSeek Harness Web",
