@@ -39,5 +39,6 @@ export function loadConfig(env = process.env) {
     manageDsh: boolean('MANAGE_DSH', env.MANAGE_DSH, true),
     dshBin: env.DSH_BIN || 'dsh',
     dshArgs: stringArray('DSH_ARGS_JSON', env.DSH_ARGS_JSON, ['web']),
+    dshCwd: env.DSH_CWD || undefined,
   }
 }

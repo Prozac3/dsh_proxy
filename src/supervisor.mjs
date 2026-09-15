@@ -35,6 +35,7 @@ export function startDsh(config, output = process.stdout, errorOutput = process.
     '--trusted-host', config.publicOrigin.host,
   ]
   const child = spawn(config.dshBin, args, {
+    cwd: config.dshCwd,
     env: process.env,
     stdio: ['inherit', 'pipe', 'pipe'],
   })

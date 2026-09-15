@@ -40,9 +40,20 @@ dsh-proxy: open https://dsh.example.com/?token=...
 ```dotenv
 DSH_BIN=pnpm
 DSH_ARGS_JSON=["--dir","/workspace/github/deepseek-harness","dsh","web"]
+DSH_CWD=/workspace/github/deepseek-harness
 ```
 
 启动器会在这些参数后追加 `--no-open --host 127.0.0.1 --port 3081 --trusted-host <PUBLIC_ORIGIN authority>`。
+
+若已经构建 Harness，可直接启动构建产物，避免包管理器在服务启动时执行依赖状态检查：
+
+```dotenv
+DSH_BIN=node
+DSH_ARGS_JSON=["/workspace/github/deepseek-harness/apps/cli/lib/bin.js","web"]
+DSH_CWD=/workspace/github/deepseek-harness
+```
+
+`DSH_CWD` 也避免 Harness 把反代项目的 `.env` 当成自己的配置文件读取。
 
 ## HTTPS
 
